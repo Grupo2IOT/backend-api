@@ -8,6 +8,7 @@ const list = async (user) => {
   if (plotIds && plotIds.length === 0) return [];
   const devices = await deviceRepository.findMany({
     where: plotIds ? { plotId: { in: plotIds } } : {},
+    include: null,
     orderBy: { createdAt: "desc" },
     take: 100,
   });

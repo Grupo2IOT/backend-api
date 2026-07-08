@@ -1,15 +1,25 @@
+const { Prisma } = require("@prisma/client");
 const prisma = require("../config/prisma");
-const { withQueryTimeout } = require("../utils/queryTimeout");
 
 const createRepository = (modelName, defaultInclude = undefined) => {
   const model = prisma[modelName];
+  const modelDefinition = Prisma.dmmf.datamodel.models.find(
+    (item) => item.name.toLowerCase() === modelName.toLowerCase()
+  );
+  const hasCreatedAt = modelDefinition?.fields.some((field) => field.name === "createdAt");
 
   return {
     findMany: async (args = {}) => {
-      const data = await withQueryTimeout(
-        model.findMany({ include: defaultInclude, ...args }),
-        `${modelName}.findMany`
-      );
+      const query = {
+        take: 100,
+        ...(hasCreatedAt ? { orderBy: { createdAt: "desc" } } : {}),
+        ...args,
+      };
+      if (!Object.prototype.hasOwnProperty.call(args, "include") && defaultInclude) {
+        query.include = defaultInclude;
+      }
+      if (query.include === null) delete query.include;
+      const data = await model.findMany(query);
       return data || [];
     },
     findById: (id, args = {}) => model.findUnique({ where: { id }, include: defaultInclude, ...args }),

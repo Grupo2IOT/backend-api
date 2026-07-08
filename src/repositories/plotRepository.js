@@ -1,24 +1,22 @@
 const prisma = require("../config/prisma");
-const debugLog = require("../utils/debugLog");
-const { withQueryTimeout } = require("../utils/queryTimeout");
 
 const include = { owner: { select: { id: true, email: true, profile: true } }, users: true, devices: true, irrigationRule: true };
 
 const findMany = async (where = {}) => {
-  const data = await withQueryTimeout(
-    prisma.plot.findMany({ where, include, orderBy: { createdAt: "desc" }, take: 100 }),
-    "plot.findMany"
-  );
+  const data = await prisma.plot.findMany({
+    where,
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
   return data || [];
 };
 
 const findIds = async (where = {}) => {
-  debugLog("plotRepository.findIds", "start");
-  const data = await withQueryTimeout(
-    prisma.plot.findMany({ where, select: { id: true }, take: 500 }),
-    "plot.findIds"
-  );
-  debugLog("plotRepository.findIds", "end");
+  const data = await prisma.plot.findMany({
+    where,
+    select: { id: true },
+    take: 500,
+  });
   return data || [];
 };
 
