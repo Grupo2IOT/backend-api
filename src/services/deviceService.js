@@ -1,10 +1,18 @@
 const deviceRepository = require("../repositories/deviceRepository");
 const plotService = require("./plotService");
 const AppError = require("../utils/AppError");
+const debugLog = require("../utils/debugLog");
 
 const list = async (user) => {
-  const plots = await plotService.list(user);
-  return deviceRepository.findMany({ where: { plotId: { in: plots.map((plot) => plot.id) } } });
+  console.log("[devices] service start");
+  const plotIds = await plotService.listIds(user);
+  if (plotIds && plotIds.length === 0) return [];
+  const devices = await deviceRepository.findMany({
+    where: plotIds ? { plotId: { in: plotIds } } : {},
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+  return devices;
 };
 
 const get = async (id, user) => {
@@ -16,18 +24,18 @@ const get = async (id, user) => {
 
 const create = async (payload, user) => {
   await plotService.get(payload.plotId, user);
-  return deviceRepository.create(payload);
+  return await deviceRepository.create(payload);
 };
 
 const update = async (id, payload, user) => {
   const current = await get(id, user);
   if (payload.plotId) await plotService.get(payload.plotId, user);
-  return deviceRepository.update(current.id, payload);
+  return await deviceRepository.update(current.id, payload);
 };
 
 const remove = async (id, user) => {
   await get(id, user);
-  return deviceRepository.delete(id);
+  return await deviceRepository.delete(id);
 };
 
 module.exports = { list, get, create, update, remove };

@@ -2,6 +2,8 @@ const { Prisma } = require("@prisma/client");
 const { error } = require("../utils/apiResponse");
 
 module.exports = (err, req, res, next) => {
+  if (res.headersSent) return next(err);
+
   if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") {
     return error(res, "Conflicto de datos únicos", [{ field: err.meta && err.meta.target }], 409);
   }

@@ -6,7 +6,7 @@ const plotService = require("./plotService");
 
 const create = async (payload, user) => {
   if (payload.plotId) await plotService.get(payload.plotId, user);
-  return reportRepository.create({
+  return await reportRepository.create({
     ...payload,
     periodStart: new Date(payload.periodStart),
     periodEnd: new Date(payload.periodEnd),
@@ -17,7 +17,7 @@ const create = async (payload, user) => {
 const waterUsage = async (user) => {
   const plots = await plotService.list(user);
   if (!plots.length) return [];
-  return telemetryRepository.history({
+  return await telemetryRepository.history({
     waterPumpOn: true,
     device: { plotId: { in: plots.map((plot) => plot.id) } },
   }, 200);

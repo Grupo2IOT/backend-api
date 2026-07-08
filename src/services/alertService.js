@@ -2,10 +2,18 @@ const alertRepository = require("../repositories/alertRepository");
 const plotService = require("./plotService");
 const auditService = require("./auditService");
 const AppError = require("../utils/AppError");
+const debugLog = require("../utils/debugLog");
 
 const list = async (user) => {
-  const plots = await plotService.list(user);
-  return alertRepository.findMany({ where: { plotId: { in: plots.map((plot) => plot.id) } }, orderBy: { createdAt: "desc" } });
+  console.log("[alerts] service start");
+  const plotIds = await plotService.listIds(user);
+  if (plotIds && plotIds.length === 0) return [];
+  const alerts = await alertRepository.findMany({
+    where: plotIds ? { plotId: { in: plotIds } } : {},
+    orderBy: { createdAt: "desc" },
+    take: 100,
+  });
+  return alerts;
 };
 
 const get = async (id, user) => {
@@ -17,12 +25,12 @@ const get = async (id, user) => {
 
 const create = async (payload, user) => {
   await plotService.get(payload.plotId, user);
-  return alertRepository.create({ status: "open", ...payload });
+  return await alertRepository.create({ status: "open", ...payload });
 };
 
 const update = async (id, payload, user) => {
   await get(id, user);
-  return alertRepository.update(id, payload);
+  return await alertRepository.update(id, payload);
 };
 
 const resolve = async (id, user) => {
@@ -34,7 +42,7 @@ const resolve = async (id, user) => {
 
 const remove = async (id, user) => {
   await get(id, user);
-  return alertRepository.delete(id);
+  return await alertRepository.delete(id);
 };
 
 module.exports = { list, get, create, update, resolve, remove };

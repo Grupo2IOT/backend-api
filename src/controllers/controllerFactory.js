@@ -1,7 +1,13 @@
 const { success } = require("../utils/apiResponse");
+const debugLog = require("../utils/debugLog");
 
 const crudController = (service, label) => ({
-  list: async (req, res) => success(res, `${label} listados`, await service.list(req.user)),
+  list: async (req, res) => {
+    debugLog(`${label}.controller.list`, "start");
+    const data = await service.list(req.user);
+    debugLog(`${label}.controller.list`, "respond", { count: Array.isArray(data) ? data.length : undefined });
+    return success(res, `${label} listados`, data);
+  },
   get: async (req, res) => success(res, `${label} encontrado`, await service.get(req.params.id, req.user)),
   create: async (req, res) => success(res, `${label} creado`, await service.create(req.body, req.user), 201),
   update: async (req, res) => success(res, `${label} actualizado`, await service.update(req.params.id, req.body, req.user)),

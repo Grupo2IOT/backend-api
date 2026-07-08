@@ -1,6 +1,5 @@
 const jwt = require("jsonwebtoken");
 const env = require("../config/env");
-const userRepository = require("../repositories/userRepository");
 const AppError = require("../utils/AppError");
 
 module.exports = async (req, res, next) => {
@@ -10,16 +9,17 @@ module.exports = async (req, res, next) => {
     if (!token) throw new AppError("Token requerido", 401);
 
     const payload = jwt.verify(token, env.jwtSecret);
-    const user = await userRepository.findById(payload.sub);
-    if (!user || !user.isActive) throw new AppError("Usuario no autorizado", 401);
+    if (!payload.sub || !Array.isArray(payload.roles)) {
+      throw new AppError("Token inválido", 401);
+    }
 
     req.user = {
-      id: user.id,
-      email: user.email,
-      roles: user.roles.map((userRole) => userRole.role.name),
+      id: payload.sub,
+      email: payload.email,
+      roles: payload.roles,
     };
-    next();
+    return next();
   } catch (err) {
-    next(err.isOperational ? err : new AppError("Token inválido o expirado", 401));
+    return next(err.isOperational ? err : new AppError("Token inválido o expirado", 401));
   }
 };

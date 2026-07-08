@@ -1,8 +1,19 @@
 const plotRepository = require("../repositories/plotRepository");
 const auditService = require("./auditService");
 const accessService = require("./accessService");
+const debugLog = require("../utils/debugLog");
 
-const list = (user) => plotRepository.findMany(accessService.plotWhereFor(user));
+const list = async (user) => {
+  console.log("[plots] service start");
+  const plots = await plotRepository.findMany(accessService.plotWhereFor(user));
+  return plots;
+};
+
+const listIds = async (user) => {
+  if (accessService.canReadAllPlots(user)) return null;
+  const rows = await plotRepository.findIds(accessService.plotWhereFor(user));
+  return rows.map((plot) => plot.id);
+};
 
 const get = async (id, user) => {
   const plot = await plotRepository.findById(id);
@@ -30,6 +41,8 @@ const remove = async (id, actor) => {
   await auditService.log({ userId: actor.id, action: "delete_plot", entity: "Plot", entityId: id, description: "Eliminar parcela" });
 };
 
-const assignUser = (id, userId) => plotRepository.assignUser(id, userId);
+const assignUser = async (id, userId) => {
+  return await plotRepository.assignUser(id, userId);
+};
 
-module.exports = { list, get, create, update, remove, assignUser };
+module.exports = { list, listIds, get, create, update, remove, assignUser };

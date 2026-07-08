@@ -5,12 +5,12 @@ const AppError = require("../utils/AppError");
 
 const list = async (user) => {
   const plots = await plotService.list(user);
-  return irrigationRuleRepository.findMany({ where: { plotId: { in: plots.map((plot) => plot.id) } } });
+  return await irrigationRuleRepository.findMany({ where: { plotId: { in: plots.map((plot) => plot.id) } } });
 };
 
 const byPlot = async (plotId, user) => {
   await plotService.get(plotId, user);
-  return irrigationRuleRepository.findMany({ where: { plotId } });
+  return await irrigationRuleRepository.findMany({ where: { plotId } });
 };
 
 const assertRange = (payload) => {
@@ -22,7 +22,7 @@ const assertRange = (payload) => {
 const create = async (payload, user) => {
   assertRange(payload);
   await plotService.get(payload.plotId, user);
-  return irrigationRuleRepository.create(payload);
+  return await irrigationRuleRepository.create(payload);
 };
 
 const update = async (id, payload, user) => {
@@ -39,7 +39,7 @@ const remove = async (id, user) => {
   const current = await irrigationRuleRepository.findById(id);
   if (!current) throw new AppError("Regla de riego no encontrada", 404);
   await plotService.get(current.plotId, user);
-  return irrigationRuleRepository.delete(id);
+  return await irrigationRuleRepository.delete(id);
 };
 
 module.exports = { list, byPlot, create, update, remove };

@@ -3,7 +3,7 @@ const { ensureBaseRoles } = require("./authService");
 
 const list = async () => {
   await ensureBaseRoles();
-  return roleRepository.findMany();
+  return await roleRepository.findMany();
 };
 
 module.exports = { list };

@@ -37,7 +37,12 @@ const remove = async (id, actor) => {
   await auditService.log({ userId: actor.id, action: "delete_user", entity: "User", entityId: id, description: "Eliminar usuario" });
 };
 
-const assignRole = (userId, role) => userRepository.assignRole(userId, role);
-const removeRole = (userId, roleId) => userRepository.removeRole(userId, roleId);
+const assignRole = async (userId, role) => {
+  return await userRepository.assignRole(userId, role);
+};
+
+const removeRole = async (userId, roleId) => {
+  return await userRepository.removeRole(userId, roleId);
+};
 
 module.exports = { list, get, create, update, remove, assignRole, removeRole };

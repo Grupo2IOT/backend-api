@@ -5,7 +5,7 @@ const AppError = require("../utils/AppError");
 
 const list = async (user, where = {}) => {
   const devices = await deviceService.list(user);
-  return commandRepository.findMany({
+  return await commandRepository.findMany({
     where: { deviceId: { in: devices.map((device) => device.id) }, ...where },
     orderBy: { createdAt: "desc" },
   });
@@ -22,7 +22,7 @@ const updateStatus = async (id, payload, user) => {
   const command = await commandRepository.findById(id);
   if (!command) throw new AppError("Comando no encontrado", 404);
   await deviceService.get(command.deviceId, user);
-  return commandRepository.update(id, {
+  return await commandRepository.update(id, {
     status: payload.status,
     deliveredAt: payload.deliveredAt ? new Date(payload.deliveredAt) : undefined,
     executedAt: payload.executedAt ? new Date(payload.executedAt) : undefined,
@@ -31,8 +31,8 @@ const updateStatus = async (id, payload, user) => {
 
 module.exports = {
   list,
-  pending: (user) => list(user, { status: "pending" }),
-  byDevice: (deviceId, user) => list(user, { deviceId }),
+  pending: async (user) => await list(user, { status: "pending" }),
+  byDevice: async (deviceId, user) => await list(user, { deviceId }),
   create,
   updateStatus,
 };
