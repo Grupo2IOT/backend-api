@@ -70,6 +70,7 @@ const options = {
       { name: "Alerts" },
       { name: "Reports" },
       { name: "Audit" },
+      { name: "Edge Integration" },
     ],
     components: {
       securitySchemes: {
@@ -272,6 +273,37 @@ const options = {
             },
           },
         },
+        EdgeReading: {
+          type: "object",
+          description: "Fila devuelta por GET /api/v1/readings del Edge API.",
+          properties: {
+            id: { type: "integer", example: 42 },
+            received_at: { type: "string", example: "2026-07-08 14:30:00" },
+            device_id: { type: "string", example: "aquaedge-01" },
+            firmware_version: { type: "string", example: "1.1.0" },
+            tick_count: { type: "integer", example: 120 },
+            timestamp_utc: { type: "string", nullable: true, example: "2026-07-08T19:30:00Z" },
+            wifi_rssi_dbm: { type: "integer", example: -62 },
+            soil_moisture_value: { type: "number", nullable: true, example: 45.2 },
+            soil_fertility_value: { type: "number", nullable: true, example: 3.8 },
+            soil_temp_value: { type: "number", nullable: true, example: 22.5 },
+            air_temp_value: { type: "number", nullable: true, example: 24.1 },
+            air_humidity_value: { type: "number", nullable: true, example: 67 },
+            water_level_status: { type: "string", nullable: true, example: "SUFFICIENT" },
+            water_pump_state: { type: "string", enum: ["ON", "OFF"], example: "OFF" },
+            fertilizer_pump_state: { type: "string", enum: ["ON", "OFF"], example: "OFF" },
+            system_health_overall: { type: "string", example: "HEALTHY" },
+            failed_sensors: { type: "array", items: { type: "string" } },
+            pending_commands: { type: "array", items: { type: "object" } },
+          },
+        },
+        EdgeSyncRequest: {
+          type: "object",
+          properties: {
+            device_id: { type: "string", example: "aquaedge-01" },
+            limit: { type: "integer", minimum: 1, maximum: 1000, default: 100 },
+          },
+        },
       },
     },
     paths: {
@@ -331,6 +363,42 @@ const options = {
           responses: { 200: responses.ok, 403: responses.error, 404: responses.error, 422: responses.error },
         }),
         delete: protectedOperation({ tags: ["Users"], summary: "Eliminar usuario", parameters: [idParam()], responses: { 200: responses.ok, 403: responses.error, 404: responses.error } }),
+      },
+      "/users/{id}/roles": {
+        post: protectedOperation({
+          tags: ["Roles"],
+          summary: "Asignar rol a usuario",
+          parameters: [idParam("id", "UUID del usuario")],
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["role"],
+                  properties: {
+                    role: {
+                      type: "string",
+                      enum: ["ADMIN", "AGRICULTOR", "SUPERVISOR", "INSTITUCION", "TECNICO"],
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 201: responses.created, 403: responses.error, 422: responses.error },
+        }),
+      },
+      "/users/{id}/roles/{roleId}": {
+        delete: protectedOperation({
+          tags: ["Roles"],
+          summary: "Retirar rol de usuario",
+          parameters: [
+            idParam("id", "UUID del usuario"),
+            idParam("roleId", "UUID del rol"),
+          ],
+          responses: { 200: responses.ok, 403: responses.error, 404: responses.error, 422: responses.error },
+        }),
       },
       "/roles": {
         get: protectedOperation({ tags: ["Roles"], summary: "Listar roles", responses: { 200: responses.ok, 403: responses.error } }),
@@ -549,6 +617,66 @@ const options = {
       },
       "/audit-logs": {
         get: protectedOperation({ tags: ["Audit"], summary: "Listar auditoría", responses: { 200: responses.ok, 403: responses.error } }),
+      },
+      "/edge/health": {
+        get: protectedOperation({
+          tags: ["Edge Integration"],
+          summary: "Consultar GET /health del Edge API",
+          responses: { 200: responses.ok, 401: responses.error, 403: responses.error, 502: responses.error, 504: responses.error },
+        }),
+      },
+      "/edge/readings": {
+        get: protectedOperation({
+          tags: ["Edge Integration"],
+          summary: "Consultar lecturas crudas del Edge API",
+          parameters: [
+            { name: "device_id", in: "query", schema: { type: "string" }, example: "aquaedge-01" },
+            { name: "limit", in: "query", schema: { type: "integer", minimum: 1, maximum: 1000, default: 100 } },
+          ],
+          responses: {
+            200: {
+              description: "Lecturas devueltas por el Edge API",
+              content: {
+                "application/json": {
+                  schema: {
+                    type: "object",
+                    properties: {
+                      success: { type: "boolean", example: true },
+                      message: { type: "string", example: "Edge readings retrieved successfully" },
+                      data: { type: "array", items: { $ref: "#/components/schemas/EdgeReading" } },
+                    },
+                  },
+                },
+              },
+            },
+            401: responses.error,
+            403: responses.error,
+            502: responses.error,
+            504: responses.error,
+          },
+        }),
+      },
+      "/edge/sync": {
+        post: protectedOperation({
+          tags: ["Edge Integration"],
+          summary: "Sincronizar lecturas Edge con Supabase PostgreSQL",
+          requestBody: jsonBody("EdgeSyncRequest", false),
+          responses: { 200: responses.ok, 401: responses.error, 403: responses.error, 502: responses.error, 504: responses.error },
+        }),
+      },
+      "/edge/status": {
+        get: protectedOperation({
+          tags: ["Edge Integration"],
+          summary: "Consultar estado del adaptador y última sincronización",
+          responses: { 200: responses.ok, 401: responses.error, 403: responses.error },
+        }),
+      },
+      "/edge/statistics": {
+        get: protectedOperation({
+          tags: ["Edge Integration"],
+          summary: "Resumir telemetría, comandos, alertas, dispositivos y última sincronización",
+          responses: { 200: responses.ok, 401: responses.error, 403: responses.error },
+        }),
       },
     },
   },

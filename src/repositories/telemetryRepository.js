@@ -4,9 +4,9 @@ const { withQueryTimeout } = require("../utils/queryTimeout");
 
 const includeDevice = { device: { include: { plot: { include: { irrigationRule: true } } } } };
 
-const latest = async () => {
-  console.log("[telemetry/latest] repository start");
+const latest = async (where = {}) => {
   const data = await prisma.telemetry.findFirst({
+    where,
     orderBy: { createdAt: "desc" },
     include: {
       device: {
@@ -16,7 +16,6 @@ const latest = async () => {
       },
     },
   });
-  console.log("[telemetry/latest] repository end");
   return data || null;
 };
 

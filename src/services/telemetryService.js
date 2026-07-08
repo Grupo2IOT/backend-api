@@ -2,8 +2,11 @@ const telemetryRepository = require("../repositories/telemetryRepository");
 const plotService = require("./plotService");
 
 const latest = async (user) => {
-  console.log("[telemetry/latest] service start");
-  return await telemetryRepository.latest();
+  const plotIds = await plotService.listIds(user);
+  if (plotIds && plotIds.length === 0) return null;
+  return await telemetryRepository.latest(
+    plotIds ? { device: { plotId: { in: plotIds } } } : {}
+  );
 };
 
 const history = async (user, filters = {}) => {

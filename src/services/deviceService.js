@@ -1,10 +1,9 @@
 const deviceRepository = require("../repositories/deviceRepository");
 const plotService = require("./plotService");
 const AppError = require("../utils/AppError");
-const debugLog = require("../utils/debugLog");
+const accessService = require("./accessService");
 
 const list = async (user) => {
-  console.log("[devices] service start");
   const plotIds = await plotService.listIds(user);
   if (plotIds && plotIds.length === 0) return [];
   const devices = await deviceRepository.findMany({
@@ -18,7 +17,9 @@ const list = async (user) => {
 const get = async (id, user) => {
   const device = await deviceRepository.findById(id);
   if (!device) throw new AppError("Dispositivo no encontrado", 404);
-  await plotService.get(device.plotId, user);
+  if (!accessService.canReadAllPlots(user)) {
+    await plotService.get(device.plotId, user);
+  }
   return device;
 };
 

@@ -1,14 +1,11 @@
 const telemetryService = require("../services/telemetryService");
 const { success } = require("../utils/apiResponse");
-const debugLog = require("../utils/debugLog");
 
 module.exports = {
   latest: async (req, res, next) => {
-    console.log("[telemetry/latest] controller start");
     try {
       const telemetry = await telemetryService.latest(req.user);
       if (res.headersSent) return;
-      console.log("[telemetry/latest] response sent");
       if (!telemetry) {
         return res.status(200).json({
           success: true,

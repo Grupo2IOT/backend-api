@@ -6,10 +6,10 @@ Este proyecto **no reemplaza el Edge API**, **no recibe telemetría directa del 
 
 ## Rol en la arquitectura IoT
 
-Flujos esperados:
+Flujo de integración:
 
 ```text
-ESP32 / mockup-iot-service / Edge API -> Supabase PostgreSQL
+ESP32 -> Edge API -> Backend API -> Supabase PostgreSQL
 React / Mobile App -> Backend API -> Supabase PostgreSQL
 ```
 
@@ -53,6 +53,10 @@ JWT_REFRESH_SECRET="replace-with-a-strong-refresh-token-secret"
 JWT_EXPIRES_IN="15m"
 JWT_REFRESH_EXPIRES_IN="7d"
 CORS_ORIGIN="http://localhost:5173"
+EDGE_API_URL="http://127.0.0.1:5000"
+EDGE_API_KEY="replace-with-the-edge-api-key"
+EDGE_SYNC_ENABLED="true"
+EDGE_SYNC_INTERVAL="30"
 ```
 
 ## Prisma
@@ -148,6 +152,19 @@ Comandos:
 - `GET /api/commands/pending`
 - `GET /api/commands/device/:deviceId`
 - `PUT /api/commands/:id/status`
+
+Integración Edge:
+
+- `GET /api/edge/health`: consulta el health check real del Edge.
+- `GET /api/edge/readings`: consulta las filas crudas de `/api/v1/readings`.
+- `POST /api/edge/sync`: sincroniza lecturas con Supabase bajo demanda.
+- `GET /api/edge/status`: muestra el estado del scheduler sin exponer secretos.
+
+El scheduler consulta el Edge cada `EDGE_SYNC_INTERVAL` segundos cuando
+`EDGE_SYNC_ENABLED=true`. Cada dispositivo debe existir previamente en Supabase
+con `Device.deviceCode` igual al `device_id` enviado por el ESP32, por ejemplo
+`aquaedge-01`. Los comandos creados en `POST /api/commands` también se envían a
+`POST /api/v1/command` del Edge usando `X-API-Key`.
 
 Reglas, eventos, alertas, reportes y auditoría:
 

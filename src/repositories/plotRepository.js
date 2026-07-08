@@ -5,12 +5,10 @@ const { withQueryTimeout } = require("../utils/queryTimeout");
 const include = { owner: { select: { id: true, email: true, profile: true } }, users: true, devices: true, irrigationRule: true };
 
 const findMany = async (where = {}) => {
-  console.log("[plots] repository start");
   const data = await withQueryTimeout(
     prisma.plot.findMany({ where, include, orderBy: { createdAt: "desc" }, take: 100 }),
     "plot.findMany"
   );
-  console.log("[plots] repository end");
   return data || [];
 };
 

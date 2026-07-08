@@ -2,11 +2,9 @@ const deviceService = require("../services/deviceService");
 
 module.exports = {
   list: async (req, res, next) => {
-    console.log("[devices] controller start");
     try {
       const data = await deviceService.list(req.user);
       if (res.headersSent) return;
-      console.log("[devices] response sent");
       return res.status(200).json({
         success: true,
         message: "Devices retrieved successfully",

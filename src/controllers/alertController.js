@@ -3,11 +3,9 @@ const { success } = require("../utils/apiResponse");
 
 module.exports = {
   list: async (req, res, next) => {
-    console.log("[alerts] controller start");
     try {
       const data = await alertService.list(req.user);
       if (res.headersSent) return;
-      console.log("[alerts] response sent");
       return res.status(200).json({
         success: true,
         message: "Alerts retrieved successfully",

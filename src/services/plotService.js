@@ -1,10 +1,8 @@
 const plotRepository = require("../repositories/plotRepository");
 const auditService = require("./auditService");
 const accessService = require("./accessService");
-const debugLog = require("../utils/debugLog");
 
 const list = async (user) => {
-  console.log("[plots] service start");
   const plots = await plotRepository.findMany(accessService.plotWhereFor(user));
   return plots;
 };

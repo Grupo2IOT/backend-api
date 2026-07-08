@@ -3,11 +3,9 @@ const { success } = require("../utils/apiResponse");
 
 module.exports = {
   list: async (req, res, next) => {
-    console.log("[plots] controller start");
     try {
       const data = await plotService.list(req.user);
       if (res.headersSent) return;
-      console.log("[plots] response sent");
       return res.status(200).json({
         success: true,
         message: "Plots retrieved successfully",

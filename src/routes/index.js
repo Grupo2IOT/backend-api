@@ -12,5 +12,6 @@ router.use("/irrigation-events", require("./irrigationEventRoutes"));
 router.use("/alerts", require("./alertRoutes"));
 router.use("/reports", require("./reportRoutes"));
 router.use("/audit-logs", require("./auditRoutes"));
+router.use("/edge", require("./edge.routes"));
 
 module.exports = router;
